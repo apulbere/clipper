@@ -4,16 +4,10 @@ import static apulbere.clipper.model.KindleConstants.OUTPUT_FORMAT;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalField;
 
 import apulbere.clipper.model.ClippingBuilder;
-import apulbere.clipper.model.KindleConstants;
-import apulbere.clipper.service.ClipperService;
-import org.junit.Before;
 import org.junit.Test;
 
 import apulbere.clipper.model.Clipping;
@@ -58,7 +52,7 @@ public class ClippingBuilderTest {
 	}
 
 	@Test
-	public void multipleDateTimeFormats1() {
+	public void multipleDateTimeFormats() {
 		dateTimeFormatter = DateTimeFormatter.ofPattern("[EEEE, MMMM d, y, h:mm a][EEEE, d MMMM yy HH:mm:ss z]");
 
 		String rawDate1 = "Sunday, July 28, 2013, 10:06 PM";

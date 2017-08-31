@@ -5,13 +5,12 @@ import apulbere.clipper.model.Clipping;
 import java.io.File;
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
 import java.util.List;
 
 /**
  * Created by adrian on 8/31/17.
  */
-public interface ClipperService {
+public interface ClippingService {
 
     List<Clipping> create(File file);
     List<Clipping> create(File file, String clippingSeparator);

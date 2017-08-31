@@ -51,6 +51,17 @@ public class Clipping {
 	}
 
 	@Override
+	public String toString() {
+		return "Clipping{" +
+				"author='" + author + '\'' +
+				", title='" + title + '\'' +
+				", location='" + location + '\'' +
+				", dateTime=" + dateTime +
+				", quote='" + quote + '\'' +
+				'}';
+	}
+
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;

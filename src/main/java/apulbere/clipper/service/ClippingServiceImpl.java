@@ -2,7 +2,6 @@ package apulbere.clipper.service;
 
 import apulbere.clipper.model.Clipping;
 import apulbere.clipper.model.ClippingBuilder;
-import apulbere.clipper.model.KindleConstants;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -24,11 +23,11 @@ import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
-public class ClipperServiceImpl implements ClipperService {
-	private static Logger logger = Logger.getLogger(ClipperServiceImpl.class);
+public class ClippingServiceImpl implements ClippingService {
+	private static Logger logger = Logger.getLogger(ClippingServiceImpl.class);
 	private Properties properties;
 
-	public ClipperServiceImpl() {
+	public ClippingServiceImpl() {
 		properties = loadProperties();
 	}
 
