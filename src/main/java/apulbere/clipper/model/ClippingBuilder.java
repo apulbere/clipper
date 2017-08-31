@@ -1,73 +1,108 @@
 package apulbere.clipper.model;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import org.apache.log4j.Logger;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
+import static java.lang.String.format;
+import static java.util.regex.Pattern.compile;
 
 public class ClippingBuilder {
 	private static Logger logger = Logger.getLogger(ClippingBuilder.class);
+	
+	public static final Pattern KINDLE_DEFAULT_PATTERN = compile("(.+)\\((.+)\\)\\s+(?:.+?Page\\s+(\\d+))*.+?Loc\\.\\s+(\\d+-*\\d+).+?on\\s+(.+)\\s+(.+)");
+	
 	private Clipping clipping;
-	private List<String> formats;
+	private DateTimeFormatter dateTimeFormatter;
 
-	public ClippingBuilder(List<String> formats) {
+	public ClippingBuilder(DateTimeFormatter dateTimeFormatter) {
 		this.clipping = new Clipping();
-		this.formats = formats;
-	}
-
-	public ClippingBuilder setTitle(String title) {
-		clipping.setTitle(title.trim());
-		return this;
-	}
-
-	public ClippingBuilder setQuote(String quote) {
-		clipping.setQuote(quote.trim());
-		return this;
-	}
-
-	public ClippingBuilder setAuthor(String author) {
-		clipping.setAuthor(author.trim());
-		return this;
-	}
-
-	public ClippingBuilder setDate(String rawDate) {
-		Optional<Date> obj = tryParseDate(rawDate.trim());
-		if(obj.isPresent()) {
-			clipping.setDate(obj.get());
-		}
-		return this;
-	}
-
-	public ClippingBuilder setLocation(Optional<String> page, Optional<String> location) {
-		StringBuilder builder = new StringBuilder();
-		if(page.isPresent()) {
-			builder.append("Page ").append(page.get()).append(" ");
-		}
-		if(location.isPresent()) {
-			builder.append("Loc. ").append(location.get());
-		}
-		String result = builder.toString().trim();
-		if(result.length() != 0) {
-			clipping.setLocation(result);
-		}
-		return this;
-	}
-
-	private Optional<Date> tryParseDate(String rawDate) {
-		for (String format: formats) {
-			try {
-				return Optional.of(new SimpleDateFormat(format).parse(rawDate));
-			} catch (ParseException e) {
-				logger.error(e.getMessage(), e);
-			}
-		}
-		return Optional.empty();
+		this.dateTimeFormatter = dateTimeFormatter;
 	}
 	
-	public Optional<Clipping> build() {
-		return clipping.getQuote() == null || clipping.getDate() == null ? Optional.empty() : Optional.of(clipping);
+	public ClippingBuilder fromRawData(String rawData) {
+		Matcher matcher = KINDLE_DEFAULT_PATTERN.matcher(rawData);
+		if(matcher.find()) {
+			withTitle(matcher.group(1));
+			withAuthor(matcher.group(2));
+			withLocation(matcher.group(3), matcher.group(4));
+			withDate(matcher.group(5));
+			withQuote(matcher.group(6));
+		}
+		return this;
+	}
+
+	public ClippingBuilder withTitle(String title) {
+		acceptValidString(clipping::setTitle, title);
+		return this;
+	}
+
+	public ClippingBuilder withQuote(String quote) {
+		acceptValidString(clipping::setQuote, quote);
+		return this;
+	}
+
+	public ClippingBuilder withAuthor(String author) {
+		acceptValidString(clipping::setAuthor, author);
+		return this;
+	}
+
+	public ClippingBuilder withDate(String rawDate) {
+		if(rawDate != null) {
+			tryParseDate(rawDate.trim()).ifPresent(clipping::setDateTime);
+		}
+		return this;
+	}
+
+	public ClippingBuilder withLocation(String page, String location) {
+		List<String> locationValues = new ArrayList<>(2);
+
+		acceptValidString(locationValues::add, page, "Page %s");
+		acceptValidString(locationValues::add, location, "Loc. %s");
+
+		if(!locationValues.isEmpty()) {
+			clipping.setLocation(String.join(" ", locationValues));
+		}
+		return this;
+	}
+
+	private Optional<LocalDateTime> tryParseDate(String rawDate) {
+		Optional<LocalDateTime> dateTime = Optional.empty();
+		try {
+			dateTime = Optional.of(LocalDateTime.parse(rawDate, dateTimeFormatter));
+		} catch (DateTimeParseException e) {
+			logger.error(e.getMessage(), e);
+		}
+		return dateTime;
+	}
+
+	public boolean isValid() {
+		return clipping.getQuote() != null || clipping.getDateTime() == null;
+
+	}
+	
+	public Clipping build() {
+		return clipping;
+	}
+
+	private void acceptValidString(Consumer<String> consumer, String value) {
+		acceptValidString(consumer, value, null);
+	}
+
+	private void acceptValidString(Consumer<String> consumer, String value, String placeholder) {
+		if(value != null) {
+			String trimmedValue = value.trim();
+			if(!trimmedValue.isEmpty()) {
+				consumer.accept(placeholder != null ? format(placeholder, trimmedValue) : trimmedValue);
+			}
+		}
 	}
 }
